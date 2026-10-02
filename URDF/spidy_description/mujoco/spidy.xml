@@ -29,22 +29,22 @@
     <geom name="floor" size="2 2 0.05" type="plane" material="grid"/>
     <light pos="0 0 1.5" type="directional"/>
     <body name="base_link" pos="0 0 0.0909">
-      <inertial pos="0.0118298 -0.000136744 0.020099" quat="0.548275 0.451442 0.452311 0.539453" mass="0.524658" diaginertia="0.00133905 0.00114578 0.000842115"/>
+      <inertial pos="0.0121647 -0.000138725 0.0231342" quat="0.544247 0.456182 0.45671 0.535825" mass="0.517075" diaginertia="0.00130565 0.00108044 0.000819073"/>
       <joint name="root" type="free"/>
       <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.6 0.6 0.63 1" density="0" mesh="base_link"/>
       <geom size="0.0786 0.061 0.0151" pos="2.86102e-09 0 -0.0179" type="box" group="3" rgba="0.55 0.55 0.58 1"/>
       <geom size="0.0714 0.043 0.0375" pos="0.00411249 0 0.0347" type="box" group="3" rgba="0.55 0.55 0.58 1"/>
       <site name="imu"/>
       <body name="fl_coxa" pos="0.06 0.05 0">
-        <inertial pos="-0.00141624 0.0287927 -0.00446" quat="0.829528 0.551418 0.0297005 0.0833" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
+        <inertial pos="-0.00178525 0.0295615 -0.00439371" quat="0.850268 0.512865 0.0168767 0.117174" mass="0.0200143" diaginertia="4.09863e-06 3.49091e-06 2.91166e-06"/>
         <joint name="fl_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_coxa"/>
         <body name="fl_femur" pos="0 0.0342 0">
-          <inertial pos="-0.00536283 0.0278179 6.30165e-10" quat="0.0167871 0.706907 -0.0167888 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
+          <inertial pos="-0.00630845 0.0278224 5.95122e-10" quat="0.051045 0.705262 -0.0510469 0.705262" mass="0.00891947" diaginertia="5.38e-06 2.88631e-06 2.78449e-06"/>
           <joint name="fl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_femur"/>
           <body name="fl_tibia" pos="0 0.0558 0">
-            <inertial pos="-0.00308253 0.000845768 -0.0100566" quat="0.697145 0.0238339 0.00735078 0.716496" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
+            <inertial pos="-0.00325911 0.00066042 -0.00898153" quat="0.698815 0.0214111 0.00379377 0.714972" mass="0.0179021" diaginertia="5.8423e-06 5.08082e-06 1.36038e-06"/>
             <joint name="fl_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_tibia"/>
             <geom size="0.004" pos="-0.005 -0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
@@ -53,15 +53,15 @@
         </body>
       </body>
       <body name="fr_coxa" pos="0.06 -0.05 0">
-        <inertial pos="-0.00141624 -0.0287927 -0.00446" quat="0.551418 0.829528 -0.0833 -0.0297005" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
+        <inertial pos="-0.00178525 -0.0295615 -0.00439371" quat="0.512865 0.850268 -0.117174 -0.0168767" mass="0.0200143" diaginertia="4.09863e-06 3.49091e-06 2.91166e-06"/>
         <joint name="fr_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_coxa"/>
         <body name="fr_femur" pos="0 -0.0342 0">
-          <inertial pos="-0.00536283 -0.0278179 6.30165e-10" quat="-0.0167871 0.706907 0.0167888 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
+          <inertial pos="-0.00630845 -0.0278224 5.95122e-10" quat="-0.051045 0.705262 0.0510469 0.705262" mass="0.00891947" diaginertia="5.38e-06 2.88631e-06 2.78449e-06"/>
           <joint name="fr_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_femur"/>
           <body name="fr_tibia" pos="0 -0.0558 0">
-            <inertial pos="-0.00308253 -0.000845768 -0.0100566" quat="0.716496 0.00735078 0.0238339 0.697145" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
+            <inertial pos="-0.00325911 -0.00066042 -0.00898153" quat="0.714972 0.00379377 0.0214111 0.698815" mass="0.0179021" diaginertia="5.8423e-06 5.08082e-06 1.36038e-06"/>
             <joint name="fr_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_tibia"/>
             <geom size="0.004" pos="-0.005 0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
@@ -70,15 +70,15 @@
         </body>
       </body>
       <body name="bl_coxa" pos="-0.06 0.05 0">
-        <inertial pos="0.00141624 0.0287927 -0.00446" quat="0.829528 0.551418 -0.0297005 -0.0833" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
+        <inertial pos="0.00178525 0.0295615 -0.00439371" quat="0.850268 0.512865 -0.0168767 -0.117174" mass="0.0200143" diaginertia="4.09863e-06 3.49091e-06 2.91166e-06"/>
         <joint name="bl_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_coxa"/>
         <body name="bl_femur" pos="0 0.0342 0">
-          <inertial pos="0.00536283 0.0278179 6.30165e-10" quat="-0.0167888 0.706907 0.0167871 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
+          <inertial pos="0.00630845 0.0278224 5.95122e-10" quat="-0.0510469 0.705262 0.051045 0.705262" mass="0.00891947" diaginertia="5.38e-06 2.88631e-06 2.78449e-06"/>
           <joint name="bl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_femur"/>
           <body name="bl_tibia" pos="0 0.0558 0">
-            <inertial pos="0.00308253 0.000845768 -0.0100566" quat="0.716496 -0.00735078 -0.0238339 0.697145" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
+            <inertial pos="0.00325911 0.00066042 -0.00898153" quat="0.714972 -0.00379377 -0.0214111 0.698815" mass="0.0179021" diaginertia="5.8423e-06 5.08082e-06 1.36038e-06"/>
             <joint name="bl_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_tibia"/>
             <geom size="0.004" pos="0.005 -0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
@@ -87,15 +87,15 @@
         </body>
       </body>
       <body name="br_coxa" pos="-0.06 -0.05 0">
-        <inertial pos="0.00141624 -0.0287927 -0.00446" quat="0.551418 0.829528 0.0833 0.0297005" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
+        <inertial pos="0.00178525 -0.0295615 -0.00439371" quat="0.512865 0.850268 0.117174 0.0168767" mass="0.0200143" diaginertia="4.09863e-06 3.49091e-06 2.91166e-06"/>
         <joint name="br_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_coxa"/>
         <body name="br_femur" pos="0 -0.0342 0">
-          <inertial pos="0.00536283 -0.0278179 6.30165e-10" quat="0.0167888 0.706907 -0.0167871 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
+          <inertial pos="0.00630845 -0.0278224 5.95122e-10" quat="0.0510469 0.705262 -0.051045 0.705262" mass="0.00891947" diaginertia="5.38e-06 2.88631e-06 2.78449e-06"/>
           <joint name="br_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_femur"/>
           <body name="br_tibia" pos="0 -0.0558 0">
-            <inertial pos="0.00308253 -0.000845768 -0.0100566" quat="0.697145 -0.0238339 -0.00735078 0.716496" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
+            <inertial pos="0.00325911 -0.00066042 -0.00898153" quat="0.698815 -0.0214111 -0.00379377 0.714972" mass="0.0179021" diaginertia="5.8423e-06 5.08082e-06 1.36038e-06"/>
             <joint name="br_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_tibia"/>
             <geom size="0.004" pos="0.005 0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>

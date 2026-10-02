@@ -1,8 +1,10 @@
-# Spidy mass budget (grams). ESTIMATES until you weigh the real parts.
-# Printed parts: Fusion volume x effective PLA density (solid PLA = 1.24 g/cm3;
-# ~0.75 accounts for walls + ~20% infill). Replace with kitchen-scale numbers
-# and re-run scripts/build_description.py.
-pla_effective_density_g_cm3: 0.75
+# Spidy mass budget (grams). Re-run scripts/build_description.py after edits.
+# Weighed 2026-10-02: robot without battery + TABLE = 465 g, battery = 215 g.
+# Printed parts: Fusion volume x effective PLA density. The density is FITTED so
+# the weighed total comes out right: 465 - 320 g non-PLA = 145 g PLA over
+# 257.2 cm3 -> 0.564 g/cm3 (solid PLA = 1.24). Board/misc grams below are still
+# guesses; that split only moves mass between base and legs, total stays 465.
+pla_effective_density_g_cm3: 0.564
 
 parts:
   base_link:   {printed: true}           # chassis plate
@@ -10,9 +12,9 @@ parts:
   shoulder:    {printed: true}           # coxa bracket (x4)
   elbow:       {printed: true}           # femur link (x4)
   claw:        {printed: true}           # tibia / foot (x4)
-  servo:       {grams: 13.4}             # MG90S datasheet
+  servo:       {grams: 14.0}             # MG90S spec
   horn:        {grams: 1.0}
-  Battery:     {grams: 190.0}            # 3S 2200 mAh LiPo, typical
+  Battery:     {grams: 215.0}            # 3S 2200 mAh LiPo, weighed
   BUCK:        {grams: 55.0}             # 12A/300W buck module
   PCA:         {grams: 25.0}             # PCA9685 + power distribution board
   MCU_board:   {grams: 20.0}             # ESP32 + Mini360

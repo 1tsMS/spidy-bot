@@ -12,48 +12,48 @@
   <xacro:property name="plate_box_size" value="0.1572 0.122 0.0302"/>
   <xacro:property name="stack_box_xyz"  value="0.00411249 0 0.0347"/>
   <xacro:property name="stack_box_size" value="0.1428 0.086 0.075"/>
-  <xacro:property name="base_mass" value="0.524658"/>
-  <xacro:property name="base_cx" value="0.0118298"/>
-  <xacro:property name="base_cy" value="-0.000136744"/>
-  <xacro:property name="base_cz" value="0.020099"/>
-  <xacro:property name="base_ixx" value="8.5234e-04"/>
-  <xacro:property name="base_iyy" value="1.3390e-03"/>
-  <xacro:property name="base_izz" value="1.1356e-03"/>
-  <xacro:property name="base_ixy" value="3.8002e-06"/>
-  <xacro:property name="base_ixz" value="-5.4712e-05"/>
-  <xacro:property name="base_iyz" value="-1.3324e-06"/>
+  <xacro:property name="base_mass" value="0.517075"/>
+  <xacro:property name="base_cx" value="0.0121647"/>
+  <xacro:property name="base_cy" value="-0.000138725"/>
+  <xacro:property name="base_cz" value="0.0231342"/>
+  <xacro:property name="base_ixx" value="8.2636e-04"/>
+  <xacro:property name="base_iyy" value="1.3056e-03"/>
+  <xacro:property name="base_izz" value="1.0732e-03"/>
+  <xacro:property name="base_ixy" value="3.7746e-06"/>
+  <xacro:property name="base_ixz" value="-4.2957e-05"/>
+  <xacro:property name="base_iyz" value="-1.5498e-06"/>
 
-  <xacro:property name="coxa_mass" value="0.021068"/>
-  <xacro:property name="coxa_cx" value="-0.00141624"/>
-  <xacro:property name="coxa_cy" value="0.0287927"/>
-  <xacro:property name="coxa_cz" value="-0.00446"/>
-  <xacro:property name="coxa_ixx" value="4.6563e-06"/>
-  <xacro:property name="coxa_iyy" value="3.4341e-06"/>
-  <xacro:property name="coxa_izz" value="3.7524e-06"/>
-  <xacro:property name="coxa_ixy" value="2.1063e-07"/>
-  <xacro:property name="coxa_ixz" value="8.4111e-09"/>
-  <xacro:property name="coxa_iyz" value="1.8597e-07"/>
+  <xacro:property name="coxa_mass" value="0.0200143"/>
+  <xacro:property name="coxa_cx" value="-0.00178525"/>
+  <xacro:property name="coxa_cy" value="0.0295615"/>
+  <xacro:property name="coxa_cz" value="-0.00439371"/>
+  <xacro:property name="coxa_ixx" value="4.0522e-06"/>
+  <xacro:property name="coxa_iyy" value="3.0828e-06"/>
+  <xacro:property name="coxa_izz" value="3.3662e-06"/>
+  <xacro:property name="coxa_ixy" value="2.0280e-07"/>
+  <xacro:property name="coxa_ixz" value="1.3216e-08"/>
+  <xacro:property name="coxa_iyz" value="2.5010e-07"/>
 
-  <xacro:property name="femur_mass" value="0.0112014"/>
-  <xacro:property name="femur_cx" value="-0.00536283"/>
-  <xacro:property name="femur_cy" value="0.0278179"/>
-  <xacro:property name="femur_cz" value="6.30165e-10"/>
-  <xacro:property name="femur_ixx" value="3.3434e-06"/>
-  <xacro:property name="femur_iyy" value="3.6520e-06"/>
-  <xacro:property name="femur_izz" value="6.6136e-06"/>
-  <xacro:property name="femur_ixy" value="1.4699e-08"/>
-  <xacro:property name="femur_ixz" value="5.8266e-14"/>
+  <xacro:property name="femur_mass" value="0.00891947"/>
+  <xacro:property name="femur_cx" value="-0.00630845"/>
+  <xacro:property name="femur_cy" value="0.0278224"/>
+  <xacro:property name="femur_cz" value="5.95122e-10"/>
+  <xacro:property name="femur_ixx" value="2.7866e-06"/>
+  <xacro:property name="femur_iyy" value="2.8842e-06"/>
+  <xacro:property name="femur_izz" value="5.3800e-06"/>
+  <xacro:property name="femur_ixy" value="1.4510e-08"/>
+  <xacro:property name="femur_ixz" value="5.3652e-14"/>
   <xacro:property name="femur_iyz" value="-6.8104e-12"/>
 
-  <xacro:property name="tibia_mass" value="0.0185889"/>
-  <xacro:property name="tibia_cx" value="-0.00308253"/>
-  <xacro:property name="tibia_cy" value="0.000845768"/>
-  <xacro:property name="tibia_cz" value="-0.0100566"/>
-  <xacro:property name="tibia_ixx" value="6.3377e-06"/>
-  <xacro:property name="tibia_iyy" value="7.1075e-06"/>
-  <xacro:property name="tibia_izz" value="1.4382e-06"/>
-  <xacro:property name="tibia_ixy" value="-1.5538e-08"/>
-  <xacro:property name="tibia_ixz" value="-2.1874e-07"/>
-  <xacro:property name="tibia_iyz" value="1.2982e-07"/>
+  <xacro:property name="tibia_mass" value="0.0179021"/>
+  <xacro:property name="tibia_cx" value="-0.00325911"/>
+  <xacro:property name="tibia_cy" value="0.00066042"/>
+  <xacro:property name="tibia_cz" value="-0.00898153"/>
+  <xacro:property name="tibia_ixx" value="5.0764e-06"/>
+  <xacro:property name="tibia_iyy" value="5.8392e-06"/>
+  <xacro:property name="tibia_izz" value="1.3679e-06"/>
+  <xacro:property name="tibia_ixy" value="-1.3773e-08"/>
+  <xacro:property name="tibia_ixz" value="-1.3394e-07"/>
+  <xacro:property name="tibia_iyz" value="1.1033e-07"/>
 
 </robot>
