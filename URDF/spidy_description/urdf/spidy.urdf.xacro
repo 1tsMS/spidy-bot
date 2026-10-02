@@ -7,11 +7,14 @@
   tibias pointing straight down.
 
   Kinematic tree, per leg (L = fl / fr / bl / br):
-    base_link -[L_hip_yaw  z]-> L_coxa -[L_hip_pitch x]-> L_femur
-              -[L_knee     x]-> L_tibia -[fixed]-> L_foot
+    base_link -[L_hip  z]-> L_coxa -[L_knee x]-> L_femur
+              -[L_claw x]-> L_tibia -[fixed]-> L_foot
 
-  Axis convention: every leg uses the SAME axes (yaw +z, pitch +x, knee +x).
-  So +hip_pitch lifts a LEFT leg but lowers a RIGHT leg. The mirroring is
+  Joint names: hip = swings the leg forward/back (yaw), knee = lifts it
+  (pitch), claw = bends the tibia. Firmware calls them HIP / KNEE / ANKLE.
+
+  Axis convention: every leg uses the SAME axes (hip +z, knee +x, claw +x).
+  So +knee lifts a LEFT leg but lowers a RIGHT leg. The mirroring is
   handled in the IK/gait code, not hidden in the URDF (same convention as
   Unitree/ANYmal descriptions).
 
@@ -71,8 +74,8 @@
        sy     : +1 left,  -1 right                                           -->
   <xacro:macro name="leg" params="prefix sx sy">
 
-    <!-- hip yaw: servo m1 is screwed to the chassis, its horn turns the coxa -->
-    <joint name="${prefix}_hip_yaw" type="revolute">
+    <!-- hip (yaw): servo m1 is screwed to the chassis, its horn turns the coxa -->
+    <joint name="${prefix}_hip" type="revolute">
       <parent link="base_link"/>
       <child  link="${prefix}_coxa"/>
       <origin xyz="${sx*hip_x} ${sy*hip_y} 0" rpy="0 0 0"/>
@@ -93,8 +96,8 @@
       </inertial>
     </link>
 
-    <!-- hip pitch: servo m2 sits in the coxa bracket, its horn drives the femur link -->
-    <joint name="${prefix}_hip_pitch" type="revolute">
+    <!-- knee (pitch): servo m2 sits in the coxa bracket, its horn drives the femur link -->
+    <joint name="${prefix}_knee" type="revolute">
       <parent link="${prefix}_coxa"/>
       <child  link="${prefix}_femur"/>
       <origin xyz="0 ${sy*coxa_len} 0" rpy="0 0 0"/>
@@ -115,9 +118,9 @@
       </inertial>
     </link>
 
-    <!-- knee: servo m3 is screwed into the claw; its horn is fixed to the femur
+    <!-- claw: servo m3 is screwed into the claw; its horn is fixed to the femur
          link, so the servo BODY rotates with the tibia. Same joint either way. -->
-    <joint name="${prefix}_knee" type="revolute">
+    <joint name="${prefix}_claw" type="revolute">
       <parent link="${prefix}_femur"/>
       <child  link="${prefix}_tibia"/>
       <origin xyz="0 ${sy*femur_len} 0" rpy="0 0 0"/>

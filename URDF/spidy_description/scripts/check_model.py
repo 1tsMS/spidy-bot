@@ -49,11 +49,11 @@ def set_pose(q_joints):
 # ---------------------------------------------------------------- 1. axes
 tiles = []
 for label, q in [("zero pose", {}),
-                 ("fl_hip_yaw +0.5", {"fl_hip_yaw": 0.5}),
-                 ("fl_hip_pitch +0.5", {"fl_hip_pitch": 0.5}),
+                 ("fl_hip +0.5", {"fl_hip": 0.5}),
                  ("fl_knee +0.5", {"fl_knee": 0.5}),
-                 ("fr_hip_pitch +0.5 (mirror!)", {"fr_hip_pitch": 0.5}),
-                 ("fr_knee +0.5 (mirror!)", {"fr_knee": 0.5})]:
+                 ("fl_claw +0.5", {"fl_claw": 0.5}),
+                 ("fr_knee +0.5 (mirror!)", {"fr_knee": 0.5}),
+                 ("fr_claw +0.5 (mirror!)", {"fr_claw": 0.5})]:
     set_pose(q)
     tiles.append(snap(cam(azim=150, elev=-20, dist=0.5), label))
 W, H = tiles[0].size

@@ -37,15 +37,15 @@
       <site name="imu"/>
       <body name="fl_coxa" pos="0.06 0.05 0">
         <inertial pos="-0.00141624 0.0287927 -0.00446" quat="0.829528 0.551418 0.0297005 0.0833" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
-        <joint name="fl_hip_yaw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
+        <joint name="fl_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_coxa"/>
         <body name="fl_femur" pos="0 0.0342 0">
           <inertial pos="-0.00536283 0.0278179 6.30165e-10" quat="0.0167871 0.706907 -0.0167888 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
-          <joint name="fl_hip_pitch" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+          <joint name="fl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_femur"/>
           <body name="fl_tibia" pos="0 0.0558 0">
             <inertial pos="-0.00308253 0.000845768 -0.0100566" quat="0.697145 0.0238339 0.00735078 0.716496" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
-            <joint name="fl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+            <joint name="fl_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fl_tibia"/>
             <geom size="0.004" pos="-0.005 -0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
             <body name="fl_foot" pos="-0.005 -0.00121 -0.0889"/>
@@ -54,15 +54,15 @@
       </body>
       <body name="fr_coxa" pos="0.06 -0.05 0">
         <inertial pos="-0.00141624 -0.0287927 -0.00446" quat="0.551418 0.829528 -0.0833 -0.0297005" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
-        <joint name="fr_hip_yaw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
+        <joint name="fr_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_coxa"/>
         <body name="fr_femur" pos="0 -0.0342 0">
           <inertial pos="-0.00536283 -0.0278179 6.30165e-10" quat="-0.0167871 0.706907 0.0167888 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
-          <joint name="fr_hip_pitch" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+          <joint name="fr_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_femur"/>
           <body name="fr_tibia" pos="0 -0.0558 0">
             <inertial pos="-0.00308253 -0.000845768 -0.0100566" quat="0.716496 0.00735078 0.0238339 0.697145" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
-            <joint name="fr_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+            <joint name="fr_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="fr_tibia"/>
             <geom size="0.004" pos="-0.005 0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
             <body name="fr_foot" pos="-0.005 0.00121 -0.0889"/>
@@ -71,15 +71,15 @@
       </body>
       <body name="bl_coxa" pos="-0.06 0.05 0">
         <inertial pos="0.00141624 0.0287927 -0.00446" quat="0.829528 0.551418 -0.0297005 -0.0833" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
-        <joint name="bl_hip_yaw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
+        <joint name="bl_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_coxa"/>
         <body name="bl_femur" pos="0 0.0342 0">
           <inertial pos="0.00536283 0.0278179 6.30165e-10" quat="-0.0167888 0.706907 0.0167871 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
-          <joint name="bl_hip_pitch" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+          <joint name="bl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_femur"/>
           <body name="bl_tibia" pos="0 0.0558 0">
             <inertial pos="0.00308253 0.000845768 -0.0100566" quat="0.716496 -0.00735078 -0.0238339 0.697145" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
-            <joint name="bl_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+            <joint name="bl_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="bl_tibia"/>
             <geom size="0.004" pos="0.005 -0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
             <body name="bl_foot" pos="0.005 -0.00121 -0.0889"/>
@@ -88,15 +88,15 @@
       </body>
       <body name="br_coxa" pos="-0.06 -0.05 0">
         <inertial pos="0.00141624 -0.0287927 -0.00446" quat="0.551418 0.829528 0.0833 0.0297005" mass="0.021068" diaginertia="4.69324e-06 3.82786e-06 3.32169e-06"/>
-        <joint name="br_hip_yaw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
+        <joint name="br_hip" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005"/>
         <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_coxa"/>
         <body name="br_femur" pos="0 -0.0342 0">
           <inertial pos="0.00536283 -0.0278179 6.30165e-10" quat="0.0167888 0.706907 -0.0167871 0.706907" mass="0.0112014" diaginertia="6.6136e-06 3.6527e-06 3.3427e-06"/>
-          <joint name="br_hip_pitch" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+          <joint name="br_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
           <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_femur"/>
           <body name="br_tibia" pos="0 -0.0558 0">
             <inertial pos="0.00308253 -0.000845768 -0.0100566" quat="0.697145 -0.0238339 -0.00735078 0.716496" mass="0.0185889" diaginertia="7.11102e-06 6.34685e-06 1.42552e-06"/>
-            <joint name="br_knee" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
+            <joint name="br_claw" range="-1.5708 1.5708" actuatorfrcrange="-0.21 0.21" armature="0.0002" damping="0.01" frictionloss="0.005" axis="1 0 0"/>
             <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.25 0.25 0.28 1" density="0" mesh="br_tibia"/>
             <geom size="0.004" pos="0.005 0.00121 -0.0849" group="3" friction="0.9" rgba="0.9 0.3 0.1 1"/>
             <body name="br_foot" pos="0.005 0.00121 -0.0889"/>
@@ -107,18 +107,18 @@
   </worldbody>
 
   <actuator>
-    <general name="fl_hip_yaw" joint="fl_hip_yaw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="fl_hip_pitch" joint="fl_hip_pitch" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="fl_hip" joint="fl_hip" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
     <general name="fl_knee" joint="fl_knee" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="fr_hip_yaw" joint="fr_hip_yaw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="fr_hip_pitch" joint="fr_hip_pitch" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="fl_claw" joint="fl_claw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="fr_hip" joint="fr_hip" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
     <general name="fr_knee" joint="fr_knee" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="bl_hip_yaw" joint="bl_hip_yaw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="bl_hip_pitch" joint="bl_hip_pitch" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="fr_claw" joint="fr_claw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="bl_hip" joint="bl_hip" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
     <general name="bl_knee" joint="bl_knee" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="br_hip_yaw" joint="br_hip_yaw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
-    <general name="br_hip_pitch" joint="br_hip_pitch" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="bl_claw" joint="bl_claw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="br_hip" joint="br_hip" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
     <general name="br_knee" joint="br_knee" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
+    <general name="br_claw" joint="br_claw" ctrlrange="-1.5708 1.5708" ctrllimited="true" forcelimited="true" forcerange="-0.21 0.21" biastype="affine" gainprm="4" biasprm="0 -4 -0.03"/>
   </actuator>
 
   <sensor>

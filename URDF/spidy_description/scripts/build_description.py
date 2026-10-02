@@ -28,10 +28,10 @@ PKG = os.path.dirname(HERE)
 
 # ---------------------------------------------------------------- geometry
 # All measured off the Fusion model (horn hub circles), in metres, world frame.
-BASE_ORIGIN = np.array([0.060, 0.030, 0.0382])   # body centre, at hip-pitch/knee height
-HIP_YAW_XY  = np.array([0.060, 0.050])           # |x|,|y| of hip-yaw axes from body centre
-COXA_LEN    = 0.0342                             # hip-yaw axis -> hip-pitch axis (along y)
-FEMUR_LEN   = 0.0558                             # hip-pitch axis -> knee axis (along y)
+BASE_ORIGIN = np.array([0.060, 0.030, 0.0382])   # body centre, at knee/claw axis height
+HIP_YAW_XY  = np.array([0.060, 0.050])           # |x|,|y| of hip (yaw) axes from body centre
+COXA_LEN    = 0.0342                             # hip axis -> knee axis (along y)
+FEMUR_LEN   = 0.0558                             # knee axis -> claw axis (along y)
 
 LEGS = {  # name: (sx, sy)   sx=+1 front, sy=+1 left
     "fl": (+1, +1), "fr": (+1, -1), "bl": (-1, +1), "br": (-1, -1),
@@ -49,10 +49,10 @@ BASE_GROUP = ["base_link", "TABLE", "Battery", "BUCK", "PCA", "MCU_board",
 
 
 def joint_frames(sx, sy):
-    yaw = BASE_ORIGIN + np.array([sx * HIP_YAW_XY[0], sy * HIP_YAW_XY[1], 0.0])
-    pitch = yaw + np.array([0.0, sy * COXA_LEN, 0.0])
-    knee = pitch + np.array([0.0, sy * FEMUR_LEN, 0.0])
-    return yaw, pitch, knee
+    hip = BASE_ORIGIN + np.array([sx * HIP_YAW_XY[0], sy * HIP_YAW_XY[1], 0.0])
+    knee = hip + np.array([0.0, sy * COXA_LEN, 0.0])
+    claw = knee + np.array([0.0, sy * FEMUR_LEN, 0.0])
+    return hip, knee, claw
 
 
 def load_world(raw, name, T):
@@ -135,8 +135,8 @@ def main():
     # ---- legs
     legs = {}
     for L, (sx, sy) in LEGS.items():
-        yaw, pitch, knee = joint_frames(sx, sy)
-        origins = {f"{L}_coxa": yaw, f"{L}_femur": pitch, f"{L}_tibia": knee}
+        hip, knee, claw = joint_frames(sx, sy)
+        origins = {f"{L}_coxa": hip, f"{L}_femur": knee, f"{L}_tibia": claw}
         legs[L] = {}
         for link, comps in leg_groups(L).items():
             named = [(n, load_world(args.raw, n, T)) for n in comps]

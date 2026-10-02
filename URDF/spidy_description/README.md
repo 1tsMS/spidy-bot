@@ -32,16 +32,16 @@ python scripts/urdf_to_mujoco.py
 
 ## Conventions
 
-- Frame: x forward, y left, z up. Base origin is the body centre at hip-pitch height.
+- Frame: x forward, y left, z up. Base origin is the body centre at knee-axis height.
 - Zero pose: the pose in the Fusion model (femur horizontal, tibia vertical).
-- Every leg uses the same axes: yaw +z, pitch +x, knee +x. So `+hip_pitch` lifts a left leg and lowers a right leg. The gait code handles the mirroring.
+- Every leg uses the same axes: hip +z, knee +x, claw +x. So `+knee` lifts a left leg and lowers a right leg. The gait code handles the mirroring.
 - Joint limits are ±90° placeholders until they're mapped from the servo calibration.
 
 ## Leg geometry (from Fusion)
 
 | | mm |
 |---|---|
-| hip-yaw axes from body centre | x ±60, y ±50 |
-| coxa (yaw → pitch) | 34.2 |
-| femur (pitch → knee) | 55.8 |
-| tibia (knee → foot tip) | 88.9 down; tip sits 5.0 toward body centre (x) and 1.2 inward (y) |
+| hip axes from body centre | x ±60, y ±50 |
+| coxa (hip → knee) | 34.2 |
+| femur (knee → claw) | 55.8 |
+| tibia (claw → foot tip) | 88.9 down; tip sits 5.0 toward body centre (x) and 1.2 inward (y) |

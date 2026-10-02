@@ -36,7 +36,9 @@ def expand_xacro():
     tag = ('<mujoco><compiler meshdir="%s" strippath="true" discardvisual="false" '
            'balanceinertia="true" fusestatic="false" autolimits="true"/></mujoco>'
            % os.path.join(PKG, "meshes"))
-    return re.sub(r"(<robot[^>]*>)", r"\1" + tag, urdf, count=1)
+    # Lambda, not r"\1" + tag: a Windows path in tag (D:\College) would be
+    # parsed as regex escapes (\C) in a replacement string.
+    return re.sub(r"(<robot[^>]*>)", lambda m: m.group(1) + tag, urdf, count=1)
 
 
 def build():
