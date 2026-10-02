@@ -1,0 +1,22 @@
+# ---- third-party downloads (not ours to redistribute) ----
+Models/Custom Spider Robot MG90S servos*/
+Models/mg90s-*/
+Models/*.zip
+
+# ---- legacy fusion2urdf export (broken, superseded by URDF/spidy_description) ----
+URDF/MS_description/
+
+# ---- secrets ----
+**/secrets.h
+
+# ---- python ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ---- OS / editor ----
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/

@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<!--
+  Spidy quadruped: hand-written URDF (xacro).
+
+  Frames (REP-103): x = forward, y = left, z = up. Units: metres, radians, kg.
+  Zero pose = the pose the robot is modelled in, in Fusion: femurs horizontal,
+  tibias pointing straight down.
+
+  Kinematic tree, per leg (L = fl / fr / bl / br):
+    base_link -[L_hip_yaw  z]-> L_coxa -[L_hip_pitch x]-> L_femur
+              -[L_knee     x]-> L_tibia -[fixed]-> L_foot
+
+  Axis convention: every leg uses the SAME axes (yaw +z, pitch +x, knee +x).
+  So +hip_pitch lifts a LEFT leg but lowers a RIGHT leg. The mirroring is
+  handled in the IK/gait code, not hidden in the URDF (same convention as
+  Unitree/ANYmal descriptions).
+
+  Numbers (lengths, masses, inertias) come from spidy_generated.xacro, which
+  scripts/build_description.py writes from the Fusion model + config/masses.yaml.
+-->
+<robot name="spidy" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Where meshes live. ROS uses package://, MuJoCo/plain tools pass a folder path. -->
+  <xacro:arg name="mesh_prefix" default="package://spidy_description/meshes"/>
+  <xacro:property name="mesh" value="$(arg mesh_prefix)"/>
+
+  <xacro:include filename="spidy_generated.xacro"/>
+
+  <!-- MG90S @ 6 V: stall ~2.2 kg*cm = 0.21 N*m, ~0.08 s/60deg = 13 rad/s -->
+  <xacro:property name="servo_effort"   value="0.21"/>
+  <xacro:property name="servo_velocity" value="13.0"/>
+  <!-- TODO: replace with real limits from your calibration (servo 0..180 deg mapped to joint angle) -->
+  <xacro:property name="lim" value="${pi/2}"/>
+  <xacro:property name="foot_radius" value="0.004"/>
+
+  <material name="pla_dark"> <color rgba="0.20 0.20 0.22 1"/></material>
+  <material name="pla_grey"> <color rgba="0.55 0.55 0.58 1"/></material>
+  <material name="servo_blue"><color rgba="0.15 0.35 0.75 1"/></material>
+  <material name="rubber">   <color rgba="0.05 0.05 0.05 1"/></material>
+
+  <!-- Leg inertials below are the FL numbers mirrored per leg:
+       mirroring x flips the sign of cx, ixy, ixz; mirroring y flips cy, ixy, iyz. -->
+
+  <!-- ============================================================ base -->
+  <link name="base_link">
+    <visual>
+      <geometry><mesh filename="${mesh}/base_link.stl"/></geometry>
+      <material name="pla_grey"/>
+    </visual>
+    <!-- Collision = two boxes, not the mesh. Physics engines turn meshes into
+         convex hulls anyway; boxes are faster and behave predictably. -->
+    <collision>
+      <origin xyz="${plate_box_xyz}" rpy="0 0 0"/>
+      <geometry><box size="${plate_box_size}"/></geometry>
+    </collision>
+    <collision>
+      <origin xyz="${stack_box_xyz}" rpy="0 0 0"/>
+      <geometry><box size="${stack_box_size}"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="${base_cx} ${base_cy} ${base_cz}" rpy="0 0 0"/>
+      <mass value="${base_mass}"/>
+      <inertia ixx="${base_ixx}" iyy="${base_iyy}" izz="${base_izz}"
+               ixy="${base_ixy}" ixz="${base_ixz}" iyz="${base_iyz}"/>
+    </inertial>
+  </link>
+
+  <!-- ============================================================ one leg
+       prefix : fl / fr / bl / br
+       sx     : +1 front, -1 back
+       sy     : +1 left,  -1 right                                           -->
+  <xacro:macro name="leg" params="prefix sx sy">
+
+    <!-- hip yaw: servo m1 is screwed to the chassis, its horn turns the coxa -->
+    <joint name="${prefix}_hip_yaw" type="revolute">
+      <parent link="base_link"/>
+      <child  link="${prefix}_coxa"/>
+      <origin xyz="${sx*hip_x} ${sy*hip_y} 0" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="${-lim}" upper="${lim}" effort="${servo_effort}" velocity="${servo_velocity}"/>
+    </joint>
+
+    <link name="${prefix}_coxa">
+      <visual>
+        <geometry><mesh filename="${mesh}/${prefix}_coxa.stl"/></geometry>
+        <material name="pla_dark"/>
+      </visual>
+      <inertial>
+        <origin xyz="${sx*coxa_cx} ${sy*coxa_cy} ${coxa_cz}" rpy="0 0 0"/>
+        <mass value="${coxa_mass}"/>
+        <inertia ixx="${coxa_ixx}" iyy="${coxa_iyy}" izz="${coxa_izz}"
+                 ixy="${sx*sy*coxa_ixy}" ixz="${sx*coxa_ixz}" iyz="${sy*coxa_iyz}"/>
+      </inertial>
+    </link>
+
+    <!-- hip pitch: servo m2 sits in the coxa bracket, its horn drives the femur link -->
+    <joint name="${prefix}_hip_pitch" type="revolute">
+      <parent link="${prefix}_coxa"/>
+      <child  link="${prefix}_femur"/>
+      <origin xyz="0 ${sy*coxa_len} 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="${-lim}" upper="${lim}" effort="${servo_effort}" velocity="${servo_velocity}"/>
+    </joint>
+
+    <link name="${prefix}_femur">
+      <visual>
+        <geometry><mesh filename="${mesh}/${prefix}_femur.stl"/></geometry>
+        <material name="pla_dark"/>
+      </visual>
+      <inertial>
+        <origin xyz="${sx*femur_cx} ${sy*femur_cy} ${femur_cz}" rpy="0 0 0"/>
+        <mass value="${femur_mass}"/>
+        <inertia ixx="${femur_ixx}" iyy="${femur_iyy}" izz="${femur_izz}"
+                 ixy="${sx*sy*femur_ixy}" ixz="${sx*femur_ixz}" iyz="${sy*femur_iyz}"/>
+      </inertial>
+    </link>
+
+    <!-- knee: servo m3 is screwed into the claw; its horn is fixed to the femur
+         link, so the servo BODY rotates with the tibia. Same joint either way. -->
+    <joint name="${prefix}_knee" type="revolute">
+      <parent link="${prefix}_femur"/>
+      <child  link="${prefix}_tibia"/>
+      <origin xyz="0 ${sy*femur_len} 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="${-lim}" upper="${lim}" effort="${servo_effort}" velocity="${servo_velocity}"/>
+    </joint>
+
+    <link name="${prefix}_tibia">
+      <visual>
+        <geometry><mesh filename="${mesh}/${prefix}_tibia.stl"/></geometry>
+        <material name="pla_dark"/>
+      </visual>
+      <!-- Only the foot tip touches the ground: one small sphere -->
+      <collision>
+        <origin xyz="${sx*foot_x} ${sy*foot_y} ${foot_z + foot_radius}" rpy="0 0 0"/>
+        <geometry><sphere radius="${foot_radius}"/></geometry>
+      </collision>
+      <inertial>
+        <origin xyz="${sx*tibia_cx} ${sy*tibia_cy} ${tibia_cz}" rpy="0 0 0"/>
+        <mass value="${tibia_mass}"/>
+        <inertia ixx="${tibia_ixx}" iyy="${tibia_iyy}" izz="${tibia_izz}"
+                 ixy="${sx*sy*tibia_ixy}" ixz="${sx*tibia_ixz}" iyz="${sy*tibia_iyz}"/>
+      </inertial>
+    </link>
+
+    <!-- Foot frame: massless marker at the tip. IK targets this frame. -->
+    <joint name="${prefix}_foot_fixed" type="fixed">
+      <parent link="${prefix}_tibia"/>
+      <child  link="${prefix}_foot"/>
+      <origin xyz="${sx*foot_x} ${sy*foot_y} ${foot_z}" rpy="0 0 0"/>
+    </joint>
+    <link name="${prefix}_foot"/>
+
+  </xacro:macro>
+
+  <!-- ============================================================ build it -->
+  <xacro:leg prefix="fl" sx="1"  sy="1"/>
+  <xacro:leg prefix="fr" sx="1"  sy="-1"/>
+  <xacro:leg prefix="bl" sx="-1" sy="1"/>
+  <xacro:leg prefix="br" sx="-1" sy="-1"/>
+
+</robot>
