@@ -1,0 +1,6 @@
+# Spidy control app + core (python -m app). The URDF pipeline has its own list.
+PySide6>=6.6
+mujoco>=3.3
+numpy
+pyserial
+pygame        # optional: gamepad

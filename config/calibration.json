@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "note": "imported from D:\\College\\projects\\MAKDA\\Codess\\Software\\spidy_calibration3.txt | scale x1.46 (1 logical deg = 1.46 real deg, MG90S 0.5-2.5 ms spec + Sit pose evidence), ticks unchanged",
+  "joints": {
+    "fl_hip": {
+      "channel": 3,
+      "center": 420.0,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -113.88,
+      "max_deg": 56.94
+    },
+    "fl_knee": {
+      "channel": 4,
+      "center": 400.0,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -131.4,
+      "max_deg": 96.36
+    },
+    "fl_claw": {
+      "channel": 5,
+      "center": 386.6666666666667,
+      "direction": 1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -61.32,
+      "max_deg": 105.12
+    },
+    "fr_hip": {
+      "channel": 11,
+      "center": 403.33333333333337,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -84.68,
+      "max_deg": 58.4
+    },
+    "fr_knee": {
+      "channel": 10,
+      "center": 400.0,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -99.28,
+      "max_deg": 106.58
+    },
+    "fr_claw": {
+      "channel": 9,
+      "center": 403.33333333333337,
+      "direction": 1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -61.32,
+      "max_deg": 129.94
+    },
+    "bl_hip": {
+      "channel": 0,
+      "center": 390.0,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -61.32,
+      "max_deg": 86.14
+    },
+    "bl_knee": {
+      "channel": 1,
+      "center": 390.0,
+      "direction": 1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -94.9,
+      "max_deg": 96.36
+    },
+    "bl_claw": {
+      "channel": 2,
+      "center": 406.6666666666667,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -128.48,
+      "max_deg": 74.46
+    },
+    "br_hip": {
+      "channel": 15,
+      "center": 413.33333333333337,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -54.02,
+      "max_deg": 131.4
+    },
+    "br_knee": {
+      "channel": 14,
+      "center": 400.0,
+      "direction": 1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -93.44,
+      "max_deg": 131.4
+    },
+    "br_claw": {
+      "channel": 13,
+      "center": 420.0,
+      "direction": -1,
+      "ticks_per_deg": 2.2831050228310503,
+      "min_deg": -78.84,
+      "max_deg": 75.92
+    }
+  },
+  "boot_pose_deg": [
+    0.0,
+    43.8,
+    14.6,
+    -0.0,
+    -43.8,
+    -14.6,
+    0.0,
+    43.8,
+    14.6,
+    -0.0,
+    -43.8,
+    -14.6
+  ],
+  "imu": {}
+}

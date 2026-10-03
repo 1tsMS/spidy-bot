@@ -101,6 +101,7 @@ def leg_ik(leg, foot):
         raise ValueError(f"{leg}: foot too close to the hip axis")
     out = np.sqrt(r**2 - fx**2)
     hip = np.arctan2(y, x) - np.arctan2(out, fx)
+    hip = (hip + np.pi) % (2 * np.pi) - np.pi    # a difference of two atan2 can leave +-pi: wrap it
 
     # 4) KNEE + CLAW, seen in the leg's own vertical plane.
     #    Now it's a 2-link arm: femur (FEMUR long) then tibia (claw axis -> foot tip).
