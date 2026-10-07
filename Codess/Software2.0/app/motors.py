@@ -6,7 +6,7 @@ Every row shows joint deg, old 0-180 servo deg and ticks.
 """
 from PySide6.QtCore import Qt, QRectF, QPointF, QSize
 from PySide6.QtGui import QPainter, QColor, QPen
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QPushButton
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QSlider, QPushButton, QSizePolicy
 
 from spidy import calibration as C
 from spidy.kinematics import LEGS, JOINTS, JOINT_NAMES
@@ -222,8 +222,12 @@ class MotorsTab(QWidget):
                 self.rows.append(r)
                 p.body.addWidget(r)
             strips.addWidget(p)
-        root.addLayout(strips)
+        holder = QWidget()
+        holder.setLayout(strips)
+        holder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)   # never squash the strips
+        root.addWidget(holder)
         self.view = SimView(ctl.sim, distance=0.32)
+        self.view.setMinimumHeight(90)                                     # the 3D view shrinks instead
         self.view.overlay = "the joint you drag lights up"
         root.addWidget(self.view, 1)
         ctl.mode_changed.connect(self._mode)

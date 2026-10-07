@@ -22,7 +22,9 @@ from spidy.calibration import Calibration, from_legacy_txt
 from spidy.gait import CrawlGait
 from spidy.imu import parse_imu
 from spidy.kinematics import JOINT_NAMES
-from spidy.link import Link, Pinger, resolve_host
+import threading
+
+from spidy.link import Link, Pinger, resolve_host, discover
 from spidy.motion import SlewLimiter, PoseMove, Sequence
 from spidy.poses import PoseLibrary, from_legacy_poses
 from spidy.sim import SimWorld
@@ -31,7 +33,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = os.path.join(ROOT, "config")
 CAL_PATH = os.path.join(CONFIG, "calibration.json")
 POSES_PATH = os.path.join(CONFIG, "poses.json")
-LEGACY_DIR = os.path.join(ROOT, "Codess", "Software")
+LEGACY_DIR = os.path.join(ROOT, "..", "Software")     # the old tool's files, Codess/Software
 
 DT = 0.02            # control tick, s (50 Hz, same as the PCA9685 frame rate)
 MAX_RATE = 240.0     # deg/s, slew limit on every joint
@@ -61,6 +63,9 @@ class RobotController(QObject):
     log = Signal(str)                 # human-readable log line
     rx = Signal(str)                  # raw line from the robot (main thread)
     link_changed = Signal(bool, str)
+    link_verified = Signal(str)       # firmware answered HELLO: "fw=2,ip=...,imu=1"
+    _discovered = Signal(object)
+    _reconnected = Signal(object)     # (ip, ok, error) from the reconnect thread
     armed_changed = Signal(bool)
     mode_changed = Signal(str)
     imu_sample = Signal(object, object)   # accel, gyro (numpy)
@@ -94,9 +99,24 @@ class RobotController(QObject):
         self._arm_wait = None
         self.imu_polling = False
         self.robot_state = None                  # last STATE reply (16 ticks)
+        self.verified = False                    # Spidy firmware answered on this link
+        self._hello_until = 0.0                  # keep asking HELLO until this time
+        self._t_hello = 0.0
+        self._warned_unarmed = 0.0
+        self._tcp_ip = None                      # last Wi-Fi robot address (for auto-reconnect)
+        self._user_disconnect = False
+        self._reconnect_until = 0.0
+        self._t_reconnect = 0.0
+        self._reconnecting = False
+        self._soft_start = None                  # time the soft start began (see _stream_pulses)
+        self._boot_logged = False
+        self._stream_state = None                # '' = streaming, else why not
+        self.tx_frames = 0                       # P16 frames actually handed to the socket
 
         self.link = Link(on_line=self._rx_from_thread.emit, on_status=self._status_from_thread.emit)
         self._rx_from_thread.connect(self._on_line)
+        self._discovered.connect(self._on_discovered)
+        self._reconnected.connect(self._on_reconnected)
         self._status_from_thread.connect(self._on_status)
         self.pinger = Pinger()
         self._t_ping = self._t_imu = 0.0
@@ -144,8 +164,15 @@ class RobotController(QObject):
         else:
             self.sim.mirror(self.q)
 
-        if self.armed and self.link.connected and self.mode in ("real", "both") and not self.raw_mode:
-            self.link.send_pulses(self.cal.channel_pulses(self.q))
+        stream_why = self._stream_blocker()
+        if stream_why != self._stream_state:          # say it out loud whenever streaming starts/stops
+            if self._stream_state is not None and self.armed or stream_why == "":
+                self.log.emit("streaming to the robot: ON" if stream_why == "" else
+                              f"streaming to the robot PAUSED: {stream_why}")
+            self._stream_state = stream_why
+        if stream_why == "":
+            if self.link.send_pulses(self._stream_pulses(now)):
+                self.tx_frames += 1
 
         if self.link.connected and now - self._t_ping > 1.0:
             self._t_ping = now
@@ -153,9 +180,65 @@ class RobotController(QObject):
         if self.link.connected and self.imu_polling and now - self._t_imu > 0.1:
             self._t_imu = now
             self.link.send("IMU")
+        if (not self.link.connected and self._reconnect_until and not self._reconnecting
+                and now - self._t_reconnect > 2.0):
+            if now > self._reconnect_until:
+                self._reconnect_until = 0.0
+                self.log.emit("! gave up reconnecting after 60 s. Press Connect to try again.")
+            else:
+                self._t_reconnect = now
+                self._reconnecting = True
+                ip = self._tcp_ip
+
+                def attempt():
+                    try:
+                        s = __import__("socket").create_connection((ip, 5000), timeout=2.0)
+                        s.close()
+                        self._reconnected.emit((ip, True, ""))
+                    except OSError as e:
+                        self._reconnected.emit((ip, False, str(e)))
+                threading.Thread(target=attempt, daemon=True).start()
+        if self.link.connected and not self.verified and self._hello_until:
+            if now > self._hello_until:
+                self._hello_until = 0.0
+                self.log.emit("! link is open but no Spidy firmware answers. Wrong port, old firmware, "
+                              "or the ESP is still booting? (it can take ~10 s to join Wi-Fi)")
+            elif now - self._t_hello > 1.0:          # the ESP may be rebooting / joining Wi-Fi: keep asking
+                self._t_hello = now
+                self.link.send("HELLO")
         if self._arm_wait and now > self._arm_wait:
             self._finish_arm(None)
         self.ticked.emit()
+
+    def _stream_blocker(self):
+        """'' if P16 frames go out this tick, otherwise the reason they don't."""
+        if not self.armed:
+            return "not armed"
+        if not self.link.connected:
+            return "not connected"
+        if self.mode == "sim":
+            return "target is Sim"
+        if self.raw_mode:
+            return "raw mode (Motors 'Raw ticks' or a Calibration step) drives single channels instead"
+        return ""
+
+    SOFT_START_LEG_S = 0.35
+
+    def _stream_pulses(self, now):
+        """P16 frame. Right after arming with LIMP servos, legs are switched on one at a
+        time (0.35 s apart) instead of all 12 servos jumping at once: that inrush current
+        can sag the supply enough to brown out the ESP32."""
+        pulses = self.cal.channel_pulses(self.q)
+        if self._soft_start is None:
+            return pulses
+        legs_on = int((now - self._soft_start) / self.SOFT_START_LEG_S) + 1
+        if legs_on >= 4:
+            self._soft_start = None
+            return pulses
+        for i, n in enumerate(JOINT_NAMES):
+            if i // 3 >= legs_on:
+                pulses[self.cal.joints[n].channel] = 0
+        return pulses
 
     def _raw_as_deg(self):
         """Raw channel ticks -> joint degrees, as the current calibration reads them."""
@@ -184,7 +267,28 @@ class RobotController(QObject):
         q[JOINT_NAMES.index(name)] = deg
         self.set_target(q)
 
+    @property
+    def real_blocked(self):
+        """Why the REAL robot would not move right now, or '' if it would."""
+        if self.mode == "sim":
+            return ""
+        if not self.link.connected:
+            return "not connected"
+        if not self.verified:
+            return "firmware not answering"
+        if not self.armed:
+            return "not armed"
+        return ""
+
+    def _warn_if_blocked(self):
+        why = self.real_blocked
+        if why and time.monotonic() - self._warned_unarmed > 3:
+            self._warned_unarmed = time.monotonic()
+            self.log.emit(f"! the real robot will NOT move: {why}"
+                          + (" (flip the ARM switch, top right)" if why == "not armed" else ""))
+
     def move_to(self, q_deg, seconds=1.0, label="move"):
+        self._warn_if_blocked()
         self.gait.set_command(0, 0)
         self.motion = PoseMove(self.q, q_deg, seconds)
         self.motion_label = label
@@ -194,6 +298,7 @@ class RobotController(QObject):
         if not steps:
             self.log.emit(f"sequence '{name}' is empty")
             return
+        self._warn_if_blocked()
         self.gait.set_command(0, 0)
         self.motion = Sequence(self.q, steps)
         self.motion_label = name
@@ -210,6 +315,8 @@ class RobotController(QObject):
         cmd = (forward * self.speed, turn * self.speed)
         if self.raw_mode:
             return
+        if forward or turn:
+            self._warn_if_blocked()
         idle = not self.gait.walking and self.motion is None
         far = np.abs(np.asarray(self.q) - self.gait.stance_deg).max() > 3
         if (forward or turn) and idle and far:
@@ -309,22 +416,77 @@ class RobotController(QObject):
         self.log.emit("boot pose sent to robot flash")
 
     # ================================================================ link
+    def _start_handshake(self):
+        """The link being open proves nothing (a COM port always opens). Only a SPIDY reply
+        to HELLO does. Keep asking for 12 s: opening USB serial resets the ESP32, and it
+        can spend up to 10 s joining Wi-Fi before it listens."""
+        self.verified = False
+        self._boot_logged = False
+        self._hello_until = time.monotonic() + 12.0
+        self._t_hello = 0.0
+
     def connect_serial(self, port):
         try:
             self.link.open_serial(port)
-            self.link.send("HELLO")
+            self._start_handshake()
         except Exception as e:
             self.log.emit(f"! serial: {e}")
 
     def connect_tcp(self, host):
         try:
             ip = resolve_host(host)
+        except OSError:
+            self.log.emit(f"{host} did not resolve (phone hotspots often block mDNS). Scanning the network for Spidy...")
+            threading.Thread(target=lambda: self._discovered.emit(discover()), daemon=True).start()
+            return
+        self._open_tcp(ip)
+
+    def _open_tcp(self, ip):
+        try:
             self.link.open_tcp(ip)
-            self.link.send("HELLO")
+            self._tcp_ip = ip
+            self._user_disconnect = False
+            self._reconnect_until = 0.0
+            self._start_handshake()
         except Exception as e:
-            self.log.emit(f"! wifi {host}: {e}")
+            self.log.emit(f"! wifi {ip}: {e}")
+
+    def _on_reconnected(self, res):
+        ip, ok, err = res
+        self._reconnecting = False
+        if ok and self._reconnect_until and not self.link.connected:
+            self.log.emit(f"robot is back at {ip}, reconnecting")
+            self._open_tcp(ip)
+
+    def _note_boot(self, text):
+        """READY/SPIDY lines carry boot=<reason>. Anything but a normal power-on means
+        the ESP restarted on its own, which is the real cause of most 'random' drops."""
+        fields = dict(kv.split("=", 1) for kv in text.split(",") if "=" in kv)
+        boot, up = fields.get("boot"), fields.get("up")
+        why = {"BROWNOUT": "the supply voltage dipped (usually a servo current spike: check the ESP's 5 V "
+                           "rail and grounds, add a big capacitor near the board)",
+               "CRASH": "the firmware crashed", "WATCHDOG": "the firmware hung and the watchdog reset it"}
+        if fields.get("pca") == "0":
+            self.log.emit("! the ESP can't find the PCA9685 servo driver on I2C (SDA/SCL wiring, 3.3 V/GND to "
+                          "the PCA logic side, address jumpers). Type I2C? in the console for a bus scan.")
+        if fields.get("pca_err", "0") not in ("0", ""):
+            self.log.emit(f"! {fields['pca_err']} servo-driver writes failed on I2C. Type PCA? to read the chip back.")
+        if boot in why and not self._boot_logged:
+            self._boot_logged = True
+            self.log.emit(f"! the ESP restarted because of a {boot}: {why[boot]}"
+                          + (f" ({up} s ago)" if up else ""))
+
+    def _on_discovered(self, ips):
+        if not ips:
+            self.log.emit("! no Spidy found on this network (port 5000). Is the ESP powered, on the same "
+                          "hotspot, and running spidy_fw? Some hotspots isolate clients from each other.")
+            return
+        self.log.emit(f"found Spidy at {ips[0]}" + (f" (also: {', '.join(ips[1:])})" if len(ips) > 1 else ""))
+        self._open_tcp(ips[0])
 
     def disconnect(self):
+        self._user_disconnect = True
+        self._reconnect_until = 0.0
         self.set_armed(False)
         self.link.close()
 
@@ -337,8 +499,9 @@ class RobotController(QObject):
                 self.armed = False
                 self.armed_changed.emit(False)
             return
-        if not self.link.connected:
-            self.log.emit("! connect to the robot before arming")
+        if not self.link.connected or not self.verified:
+            self.log.emit("! can't arm: " + ("connect to the robot first" if not self.link.connected
+                                             else "the Spidy firmware hasn't answered yet"))
             self.armed_changed.emit(False)
             return
         self.link.send("STATE")
@@ -353,19 +516,37 @@ class RobotController(QObject):
             self.target = np.array(self.q)
             self.log.emit("armed: starting from the robot's current servo positions")
         else:
-            self.log.emit("armed: robot outputs were off, servos will move to the current target")
+            self.log.emit("armed: servos were limp, waking them one leg at a time (soft start)")
+            self._soft_start = time.monotonic()
         self.armed = True
         self.armed_changed.emit(True)
 
     def _on_status(self, connected, text):
         self.log.emit(text)
         if not connected:
+            was_armed = self.armed
             self.set_armed(False)
+            self.verified = False
+            self._hello_until = 0.0
+            if self._tcp_ip and not self._user_disconnect and not self._reconnect_until:
+                self._reconnect_until = time.monotonic() + 60.0
+                self.log.emit(f"! lost the robot{' while ARMED' if was_armed else ''}. Reconnecting to "
+                              f"{self._tcp_ip} (it will NOT re-arm by itself)...")
         self.link_changed.emit(connected, self.link.name if connected else "")
 
     def _on_line(self, line):
         self.pinger.feed(line)
         if line.startswith("PONG"):
+            return
+        if line.startswith("READY") or line.startswith("SPIDY,"):
+            self._note_boot(line)
+        if line.startswith("SPIDY,"):
+            if not self.verified:
+                self.verified = True
+                self._hello_until = 0.0
+                info = line[6:]
+                self.log.emit(f"Spidy firmware answered: {info}")
+                self.link_verified.emit(info)
             return
         if line.startswith("IMU,"):
             s = parse_imu(line)

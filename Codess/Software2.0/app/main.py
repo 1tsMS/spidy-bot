@@ -126,6 +126,7 @@ class MainWindow(QMainWindow):
         c.rx.connect(lambda l: self._log(f"< {l}"))
         self.console.send_line.connect(self._raw_send)
         c.link_changed.connect(self._link_changed)
+        c.link_verified.connect(self._verified)
         c.armed_changed.connect(self._armed_changed)
         c.mode_changed.connect(self._mode_changed)
 
@@ -249,8 +250,9 @@ class MainWindow(QMainWindow):
         self.s_lat = label("", "mono")
         self.s_mode = label("", "mono")
         self.s_loop = label("", "mono")
+        self.s_tx = label("", "mono")
         self.s_keys = label("W A S D  walk     Space  e-stop     Ctrl+`  console", "faint")
-        for w in (self.s_link, self.s_lat, self.s_mode, self.s_loop):
+        for w in (self.s_link, self.s_lat, self.s_mode, self.s_tx, self.s_loop):
             h.addWidget(w)
         h.addStretch()
         h.addWidget(self.s_keys)
@@ -268,6 +270,17 @@ class MainWindow(QMainWindow):
         self._ticks, self._t0 = 0, now
         c = self.ctl
         self.s_loop.setText(f"loop {hz:4.0f} Hz")
+        tx = c.tx_frames - getattr(self, "_tx0", 0)
+        self._tx0 = c.tx_frames
+        drop = c.link.dropped - getattr(self, "_drop0", 0)
+        self._drop0 = c.link.dropped
+        dt = max(now - getattr(self, "_t_tx", now - 0.5), 1e-3)
+        self._t_tx = now
+        if c.armed and c.link.connected:
+            self.s_tx.setText(f"tx {tx / dt:3.0f}/s" + (f"  dropped {drop}" if drop else ""))
+            self.s_tx.setStyleSheet(f"color: {theme.RED if (drop or tx == 0) else theme.TEXT_2};")
+        else:
+            self.s_tx.setText("")
         lat = c.pinger.last_ms
         self.s_lat.setText(f"{lat:.0f} ms" if (c.link.connected and lat) else "")
         armed = "  ·  ARMED" if c.armed else ""
@@ -301,10 +314,16 @@ class MainWindow(QMainWindow):
 
     def _link_changed(self, ok, name):
         self.btn_conn.setText("Disconnect" if ok else "Connect")
-        self.s_link.setText(f"● {name}" if ok else "● offline")
-        self.s_link.setStyleSheet(f"color: {theme.ACCENT if ok else theme.TEXT_3};")
+        self.s_link.setText(f"● {name} · waiting for firmware" if ok else "● offline")
+        self.s_link.setStyleSheet(f"color: {theme.AMBER if ok else theme.TEXT_3};")
         for w in (self.transport, self.port, self.btn_refresh):
             w.setEnabled(not ok)
+
+    def _verified(self, info):
+        fw = dict(kv.split("=", 1) for kv in info.split(",") if "=" in kv)
+        self.s_link.setText(f"● {self.ctl.link.name} · spidy fw {fw.get('fw', '?')}"
+                            + ("" if fw.get("imu") == "1" else " · no IMU"))
+        self.s_link.setStyleSheet(f"color: {theme.ACCENT};")
 
     def _mode_changed(self, m):
         self.mode.set(m)

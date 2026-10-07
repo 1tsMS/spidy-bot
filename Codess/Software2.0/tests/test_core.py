@@ -8,8 +8,8 @@ from spidy import kinematics as K
 from spidy import calibration as C
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LEGACY = os.path.join(ROOT, "Codess", "Software", "spidy_calibration3.txt")
-MODEL = os.path.join(ROOT, "URDF", "spidy_description", "mujoco", "spidy.xml")
+LEGACY = os.path.join(ROOT, "..", "Software", "spidy_calibration3.txt")
+from spidy.sim import MODEL
 
 
 class TestKinematics(unittest.TestCase):

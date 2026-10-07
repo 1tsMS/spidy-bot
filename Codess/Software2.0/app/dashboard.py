@@ -159,6 +159,8 @@ class Dashboard(QWidget):
         self.view.pills = [(act.upper(), col)] if col else []
         if c.armed:
             self.view.pills.insert(0, ("ARMED", theme.RED))
+        elif c.real_blocked:
+            self.view.pills.insert(0, (f"REAL ROBOT: {c.real_blocked.upper()}", theme.AMBER))
         fell = physics and c.sim.fallen()
         self.view.banner = "Sim robot fell over  ·  Reset sim" if fell else ""
         f, t = c.gait.cmd_s

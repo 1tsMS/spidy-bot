@@ -10,8 +10,9 @@ import mujoco.viewer
 
 from step1_leg_ik import LEGS, leg_ik
 
+# This file: <repo>/Codess/Simulation/sim_walk/simrun.py, the model is at <repo>/URDF
 MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                     "..", "URDF", "spidy_description", "mujoco", "spidy.xml")
+                     "..", "..", "..", "URDF", "spidy_description", "mujoco", "spidy.xml")
 
 
 def load():

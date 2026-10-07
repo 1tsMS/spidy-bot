@@ -1,6 +1,6 @@
 # sim_walk: making Spidy walk in MuJoCo, one idea per file
 
-Each step builds on the one before and runs on its own. Run them from the repo root.
+Each step builds on the one before and runs on its own. Run them from `Codess/Simulation`.
 
 | File | Idea | Run |
 |---|---|---|

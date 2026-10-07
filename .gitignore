@@ -22,4 +22,4 @@ desktop.ini
 .vscode/
 
 # ---- app ----
-config/backups/
+**/config/backups/

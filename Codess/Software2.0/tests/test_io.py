@@ -14,7 +14,7 @@ from spidy.gait import CrawlGait
 from spidy.motion import SlewLimiter, Sequence
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OLD = os.path.join(ROOT, "Codess", "Software")
+OLD = os.path.join(ROOT, "..", "Software")
 
 
 class TestPoses(unittest.TestCase):

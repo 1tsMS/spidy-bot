@@ -13,8 +13,9 @@ import mujoco
 
 from .kinematics import angles_to_feet, JOINT_NAMES
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL = os.path.join(ROOT, "URDF", "spidy_description", "mujoco", "spidy.xml")
+# This file: <repo>/Codess/Software2.0/spidy/sim.py. The robot model lives at <repo>/URDF.
+REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+MODEL = os.path.join(REPO, "URDF", "spidy_description", "mujoco", "spidy.xml")
 STALL = 0.21            # N*m, MG90S
 
 

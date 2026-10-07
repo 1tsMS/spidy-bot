@@ -1,99 +1,55 @@
 # Spidy Bot
 
-A 3D-printed, 12-servo quadruped built from scratch. It's being taught to walk in simulation first (MuJoCo), then on the real hardware.
+A 3D-printed 12-servo quadruped (ESP32 + PCA9685 + MG90S), with a MuJoCo model, leg IK, a crawl gait in simulation, and a desktop control app.
 
-<p align="center">
-  <img src="URDF/spidy_description/mujoco/checks/stand_test.png" width="420" alt="Spidy standing in MuJoCo">
-</p>
-
-> Learning project. The goal is a robot that crawls, turns and takes gamepad input, and an understanding of every layer on the way there: CAD → URDF → physics sim → kinematics → gait → firmware.
-
-## Status
-
-- [x] Mechanical design (Fusion 360), printed and assembled
-- [x] Power system: 3S LiPo → 12 A buck @ 6 V → custom distribution board
-- [x] ESP32 + PCA9685 firmware with a serial / WiFi-TCP command protocol
-- [x] PyQt calibration and pose tool; sit ↔ stand works
-- [x] URDF/xacro generated from the CAD, with per-link meshes and mass properties
-- [x] MuJoCo model: stands in sim, torque audit per servo
-- [ ] Real masses (weigh parts) and zero-pose calibration
-- [ ] Leg inverse kinematics
-- [ ] Crawl gait + turning in sim
-- [ ] Sim2real bridge (same gait code drives sim and robot)
-- [ ] Gamepad control, IMU levelling
+**Status:** stands and does slow sit/stand with some help. The crawl and turning work in simulation only. The real robot doesn't walk: the front legs don't have enough servo torque (details below).
 
 ## Hardware
 
-| | |
+| Part | Used |
 |---|---|
-| Actuators | 12× MG90S metal-gear micro servos (3 per leg) |
-| Servo driver | PCA9685, 16-channel PWM @ 50 Hz |
-| Controller | ESP32 |
-| Power | 3S LiPo 2200 mAh, 12 A buck converter set to 6 V |
-| IMU | MPU6050 (fitted, not used yet) |
-| Frame | PLA, Fusion 360 |
+| Frame | PLA, designed in Fusion 360, 4 legs × 3 joints (hip, knee, claw) |
+| Servos | 12× MG90S |
+| Servo driver | PCA9685 @ 0x40, 50 Hz, with a custom breakout board on top |
+| Controller | ESP32 (uPesy Wroom DevKit), Wi-Fi |
+| IMU | MPU6050 |
+| Battery | 3S 11.1 V 2200 mAh LiPo |
+| Servo supply | 12 A 300 W buck, set to 6 V |
+| ESP supply | Mini360 buck, 5 V, fed from the battery side |
 
-Leg geometry: coxa 34.2 mm, femur 55.8 mm, tibia 88.9 mm. Estimated mass ~730 g.
+Leg lengths: coxa 34.2 mm, femur 55.8 mm, tibia 88.9 mm. Total mass 704 g.
 
-## How it fits together
+## Software
 
-```mermaid
-flowchart LR
-    F[Fusion 360 model] -->|STL + transforms| B[build_description.py]
-    B --> U[spidy.urdf.xacro]
-    U -->|urdf_to_mujoco.py| M[MuJoCo model]
-    G[Gait + IK - Python] -->|12 joint angles| M
-    G -->|serial / WiFi| E[ESP32 firmware]
-    E -->|I2C| P[PCA9685] --> S[12x MG90S]
-    C[PyQt calibration tool] -->|serial / WiFi| E
-```
-
-## Repository layout
-
-| Path | What's inside |
+| Path | What |
 |---|---|
-| `Codess/Software/esp32_receiver/` | Main ESP32 firmware: line protocol → PCA9685 |
-| `Codess/Software/spidy_Caliberation.py` | Desktop tool: per-servo calibration, saving and playing poses |
-| `Codess/Software/*.txt` | Current calibration and saved poses |
-| `Codess/*` | Small bring-up sketches (I2C check, servo sweep, centring) |
-| `URDF/spidy_description/` | URDF/xacro, meshes, MuJoCo model, build scripts ([README](URDF/spidy_description/README.md)) |
-| `URDF/raw_world_stl/` | Per-component STLs exported from Fusion (input to the URDF build) |
-| `Final Parts/`, `Models/`, `*.3mf` | Printable parts and slicer projects |
+| `Codess/Software/` | **Old version.** ESP32 firmware with calibration hardcoded on the board, plus a PyQt5 tool for per-servo calibration and poses. |
+| `Codess/Software2.0/` | **New version.** PySide6 app: live MuJoCo view, joystick driving, calibration wizard, pose library, 50 Hz Wi-Fi streaming to the robot. Run `Spidy.bat` or `python run_app.py`. |
+| `firmware/spidy_fw/` | Firmware for the new app. All calibration lives on the PC; the ESP only drives pulses, holds the last pose if Wi-Fi drops, and reports its reset reason and I2C health. |
+| `Codess/Simulation/sim_walk/` | Walking in MuJoCo step by step: IK, standing, body shift, crawl, turning. |
+| `URDF/spidy_description/` | URDF and MuJoCo model generated from the Fusion CAD. |
 
-## Quick start
+Wi-Fi credentials go in `secrets.h` (copy `secrets.example.h`); it's gitignored.
 
-**Simulation** (Windows/Linux/macOS, Python 3.10+):
+## Problems and what fixed them
 
-```bash
-pip install -r URDF/spidy_description/requirements.txt
-python -m mujoco.viewer --mjcf=URDF/spidy_description/mujoco/spidy.xml
-```
+1. **Servo horns at the wrong angle.** Each servo was centred to 90° in software *before* its horn was screwed on, so all legs started from a known position.
+2. **"90°" didn't look like 90° on the real legs.** Horn splines and print tolerances left every joint a few degrees off. Added a per-servo offset and direction, saved to a calibration file.
+3. **Couldn't sit and stand.** A direct move overloaded the knees. I found a working standing pose (`Standf`, knees bent, tibias vertical) and an ordered chain of intermediate poses by hand. The new app adds IK-planned sit/stand sequences and a step reducer (aggressive / balanced / conservative).
+4. **Power.** The original 18650 cells + XL4015 buck sagged under servo load. Replaced them with a 3S 2200 mAh LiPo and a 12 A buck.
+5. **Thin PCA9685 power traces.** The board's own traces can't carry 12 servos' current. Made a breakout board that sits on the PCA9685 like a hat, with header pins and thick solder traces for servo power.
+6. **ESP32 rebooting during moves.** Brownouts from servo current spikes. Confirmed by having the firmware report the ESP32's reset reason (`boot=BROWNOUT`). Fixed by:
+   - moving the Mini360 input from the 6 V servo rail to the battery side,
+   - adding 1000 µF + 100 nF at the ESP,
+   - adding 1000 µF on the servo rail at the breakout.
+7. **Servo scale was wrong.** The old firmware's "degrees" were ~1.46 real degrees (pulse range 100–700 ticks vs the MG90S's 0.5–2.5 ms). Found it because the real Sit pose only matched the sim at that scale. Corrected in the calibration, with pulses unchanged.
 
-Open the *Control* panel in the viewer and drag the 12 joint sliders.
+## Open problem: weak front legs
 
-**Firmware:**
+This has been there since day one, and the power and wiring fixes didn't change it.
 
-1. Copy `Codess/Software/esp32_receiver/secrets.example.h` to `secrets.h` and add your WiFi details.
-2. Flash `esp32_receiver.ino` with the Arduino IDE. It needs the **Adafruit PWM Servo Driver** library.
-3. Connect with the calibration tool: `pip install pyqt5 pyserial`, then `python Codess/Software/spidy_Caliberation.py`.
-
-**Command protocol** (USB serial 115200, or TCP port 5000):
-
-```
-POSE,<12 angles>[,ms]   smooth move to a pose
-M,<id>,<pulse>          raw pulse to one channel
-ESTOP                   all servos off
-```
-
-## Conventions
-
-- Frames follow ROS REP-103: x forward, y left, z up. SI units.
-- Zero pose = femurs horizontal, tibias vertical (the CAD pose).
-- All legs use the same joint axes; left/right mirroring is handled in software.
-
-## Lessons so far
-
-- **Sequencing beats power.** Sit → stand only worked after reordering the motion (ankle → knee → posture).
-- **The PCA9685 is a signal board.** Servo current needs its own thick distribution path.
-- **Two ground paths caused a ground loop**, which made the servos whine.
-- **The sim points at the front-leg weakness.** With estimated masses the COM sits ~12 mm forward, so the front hip servos work ~50% harder than the rear ones. To be confirmed with real masses.
+- **Cause:** the battery and buck sit at the front, so the centre of mass is ~12 mm forward.
+- In simulation the front knees need **~43% of a genuine MG90S's stall torque just to stand**, against ~29% for the rear knees.
+- Servos can only hold roughly 25–50% of stall continuously, and most MG90S sold are clones with well under the rated 2.2 kg·cm. So the front knees run at or past their limit, and transitions need help.
+- Swapping the front servos didn't fix it.
+- **Likely fixes:** move the battery ~30 mm back (balances front and rear in sim), and use stronger knee servos (≈3.5 kg·cm, e.g. MG92B).

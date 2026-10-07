@@ -4,8 +4,8 @@ Desktop app to calibrate, pose and walk Spidy, in the MuJoCo sim and on the real
 
 ```
 pip install -r requirements.txt
-python -m app                 # from the repo root
-python -m unittest discover -s tests -v
+python -m app                 # from Codess/Software2.0
+python -m unittest discover -s tests -v      # from Codess/Software2.0
 ```
 
 ## Layout
@@ -14,7 +14,7 @@ python -m unittest discover -s tests -v
 |---|---|
 | `spidy/` | Core, no GUI: kinematics, gait, calibration, link, sim, IMU, poses |
 | `app/` | PySide6 GUI: Dashboard, Motors, Calibration wizard, Poses |
-| `config/calibration.json` | The ONLY calibration. Imported once from `Codess/Software/spidy_calibration3.txt` |
+| `config/calibration.json` | The ONLY calibration. Imported once from `../Software/spidy_calibration3.txt` |
 | `config/poses.json` | Poses in joint degrees + sequences. Imported once from `spidy_poses.txt` |
 | `firmware/spidy_fw/` | New firmware: pulses in, servos out. Needs `secrets.h` (copy `secrets.example.h`) |
 

@@ -9,7 +9,9 @@
 //   STATE            last ticks per channel                           -> STATE,<16 ticks>
 //   BOOT,<16 ticks>  store the power-on pose in flash                 -> BOOT_OK
 //   BOOT?            read it back                                     -> BOOT,<16 ticks> | BOOT,NONE
-//   HELLO            identify                                         -> SPIDY,fw=2,ip=<ip>,imu=<0|1>
+//   I2C?             bus scan + PCA write errors  -> I2C,devices=0x40 0x68,pca_begin=1,pca_write_errors=0
+//   PCA?             PCA9685 registers read back   -> PCA,mode1=..,mode2=..,prescale=121,ch=<16 values|OFF|ERR>
+//   HELLO            identify          -> SPIDY,fw=2,ip=<ip>,imu=<0|1>,boot=<reset reason>,up=<s>
 //
 // Failsafe: if a P16 stream stops for STALE_MS the servos HOLD their last pulse
 // (the PCA9685 keeps outputting it on its own) and STALE is reported once.
@@ -25,6 +27,7 @@
 #include <Adafruit_PWMServoDriver.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <esp_system.h>
 #include "secrets.h"   // WIFI_SSID / WIFI_PASS. Copy secrets.example.h -> secrets.h
 
 static const uint8_t  CHANNELS   = 16;
@@ -42,10 +45,28 @@ WiFiClient client;
 
 uint16_t ticks[CHANNELS];      // what each channel outputs now, 0 = off
 bool imuOk = false;
+bool pcaOk = false;            // pwm.begin() found the PCA9685
+uint32_t pcaWriteErrors = 0;   // setPWM() calls the chip did not acknowledge
 bool streaming = false;
 bool staleReported = false;
 uint32_t lastP16 = 0;
 String serialBuf, tcpBuf;
+
+// Why did the ESP32 last start? Sent with READY/HELLO so the PC can tell a brownout
+// (servo current spike pulled the supply down) from a crash or a normal power-on.
+const char *resetReason() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:   return "poweron";
+    case ESP_RST_BROWNOUT:  return "BROWNOUT";
+    case ESP_RST_PANIC:     return "CRASH";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT:       return "WATCHDOG";
+    case ESP_RST_SW:        return "software";
+    case ESP_RST_EXT:       return "reset-pin";
+    default:                return "other";
+  }
+}
 
 // ------------------------------------------------------------------ output
 void reply(const String &msg) {
@@ -56,13 +77,13 @@ void reply(const String &msg) {
 void writeChannel(uint8_t ch, uint16_t t) {
   if (ch >= CHANNELS) return;
   if (t == 0) {                       // off: no pulse at all, servo goes limp
-    pwm.setPWM(ch, 0, 4096);          // 4096 = the PCA9685 "full off" bit
+    if (pwm.setPWM(ch, 0, 4096)) pcaWriteErrors++;   // 4096 = the PCA9685 "full off" bit
     ticks[ch] = 0;
     return;
   }
   t = constrain(t, TICK_MIN, TICK_MAX);
   if (ticks[ch] == t) return;         // unchanged: skip the I2C write
-  pwm.setPWM(ch, 0, t);
+  if (pwm.setPWM(ch, 0, t)) pcaWriteErrors++;      // non-zero return = I2C write failed
   ticks[ch] = t;
 }
 
@@ -142,6 +163,41 @@ void handleLine(String line) {
           String(g.gyro.z, 4));
     return;
   }
+  if (line == "I2C?") {                             // which chips answer on the bus?
+    String found;
+    for (uint8_t a = 1; a < 127; a++) {
+      Wire.beginTransmission(a);
+      if (Wire.endTransmission() == 0) {
+        if (found.length()) found += ' ';
+        found += "0x" + String(a, HEX);
+      }
+    }
+    reply("I2C,devices=" + found + ",pca_begin=" + String(pcaOk ? 1 : 0) +
+          ",pca_write_errors=" + String(pcaWriteErrors));
+    return;
+  }
+  if (line == "PCA?") {                             // read the PCA9685's own registers back
+    auto rd = [](uint8_t reg) -> int {
+      Wire.beginTransmission(0x40);
+      Wire.write(reg);
+      if (Wire.endTransmission(false) != 0) return -1;
+      if (Wire.requestFrom((uint8_t)0x40, (uint8_t)1) != 1) return -1;
+      return Wire.read();
+    };
+    int mode1 = rd(0x00), mode2 = rd(0x01), pre = rd(0xFE);
+    String msg = "PCA,mode1=0x" + String(mode1, HEX) + (mode1 >= 0 && (mode1 & 0x10) ? "(SLEEP)" : "") +
+                 ",mode2=0x" + String(mode2, HEX) + ",prescale=" + String(pre) + ",ch=";
+    for (uint8_t ch = 0; ch < CHANNELS; ch++) {
+      uint8_t base = 0x06 + 4 * ch;               // LEDn_ON_L, ON_H, OFF_L, OFF_H
+      int offL = rd(base + 2), offH = rd(base + 3);
+      if (ch) msg += ' ';
+      if (offL < 0 || offH < 0) msg += "ERR";
+      else if (offH & 0x10) msg += "OFF";
+      else msg += String(((offH & 0x0F) << 8) | offL);
+    }
+    reply(msg);
+    return;
+  }
   if (line == "BOOT?") {
     uint16_t b[CHANNELS];
     reply(loadBoot(b) ? "BOOT," + ticksCsv(b) : String("BOOT,NONE"));
@@ -159,7 +215,9 @@ void handleLine(String line) {
   }
   if (line == "HELLO") {
     String ip = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : String("none");
-    reply("SPIDY,fw=2,ip=" + ip + ",imu=" + String(imuOk ? 1 : 0));
+    reply("SPIDY,fw=2,ip=" + ip + ",imu=" + String(imuOk ? 1 : 0) + ",pca=" + String(pcaOk ? 1 : 0) +
+          ",pca_err=" + String(pcaWriteErrors) + ",boot=" + resetReason() +
+          ",up=" + String(millis() / 1000));
     return;
   }
   reply("ERR,unknown: " + line);
@@ -181,7 +239,8 @@ void feed(String &buf, char c) {
 void setup() {
   Serial.begin(115200);
   Wire.begin();
-  pwm.begin();
+  Wire.setTimeOut(20);                // ms. A supply dip can wedge the bus: fail fast, never hang
+  pcaOk = pwm.begin();
   pwm.setPWMFreq(50);
   for (uint8_t ch = 0; ch < CHANNELS; ch++) ticks[ch] = 1;   // force the first write
   allOff();
@@ -203,6 +262,7 @@ void setup() {
 
   if (WIFI_SSID != nullptr && WIFI_SSID[0] != '\0') {
     WiFi.mode(WIFI_STA);
+    WiFi.setSleep(false);             // modem power-save stalls the link 100-300 ms: bad for a 50 Hz stream
     WiFi.begin(WIFI_SSID, WIFI_PASS);
     uint32_t t0 = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - t0 < 10000) delay(200);
@@ -215,7 +275,7 @@ void setup() {
       Serial.println("WIFI_ERR");
     }
   }
-  reply(String("READY,imu=") + (imuOk ? "1" : "0"));
+  reply(String("READY,imu=") + (imuOk ? "1" : "0") + ",pca=" + (pcaOk ? "1" : "0") + ",boot=" + resetReason());
 }
 
 void loop() {
@@ -226,12 +286,16 @@ void loop() {
     client = server.available();
     client.setNoDelay(true);
     tcpBuf = "";
-    client.println("READY");
+    client.println(String("READY,boot=") + resetReason() + ",up=" + String(millis() / 1000));
   }
-  while (client && client.connected() && client.available()) feed(tcpBuf, (char)client.read());
+  // At most ~4 stream lines per pass, so a burst of buffered Wi-Fi data can't keep loop()
+  // busy long enough to starve the Wi-Fi stack / trip the watchdog.
+  for (int n = 0; n < 512 && client && client.connected() && client.available(); n++)
+    feed(tcpBuf, (char)client.read());
 
   if (streaming && !staleReported && millis() - lastP16 > STALE_MS) {
     reply("STALE");                   // stream stopped: servos HOLD the last pose
     staleReported = true;
   }
+  delay(1);                           // let the Wi-Fi / idle tasks run every pass
 }

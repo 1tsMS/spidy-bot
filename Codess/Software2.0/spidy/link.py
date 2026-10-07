@@ -13,9 +13,12 @@ Firmware also prints READY at boot and STALE if the P16 stream stops (it then HO
 
 Reading runs on a background thread; every received line goes to on_line(line).
 """
+import ipaddress
+import select
 import socket
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 try:
     import serial
@@ -43,6 +46,7 @@ class Link:
         self._stop = threading.Event()
         self._wlock = threading.Lock()
         self.name = ""
+        self.dropped = 0          # stream frames skipped because Wi-Fi was momentarily busy
 
     @property
     def connected(self):
@@ -60,8 +64,13 @@ class Link:
     def open_tcp(self, host, port=TCP_PORT, timeout=3.0):
         self.close()
         s = socket.create_connection((host, port), timeout=timeout)
-        s.settimeout(0.05)
+        # 1 s timeout for blocking calls. Reads never block (select() first, see _reader),
+        # so this only limits how long a COMMAND may wait for a congested Wi-Fi link.
+        # (It used to be 50 ms for everything: a normal Wi-Fi stall then killed the link.)
+        s.settimeout(1.0)
         s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)   # don't batch small lines
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.dropped = 0
         self._sock = s
         self.name = f"{host}:{port}"
         self._start()
@@ -105,7 +114,19 @@ class Link:
             return False
 
     def send_pulses(self, pulses16):
-        return self.send("P16," + ",".join(str(int(p)) for p in pulses16))
+        """Stream frame. If Wi-Fi is momentarily backed up, SKIP this frame instead of
+        waiting: the next one (20 ms later) carries newer angles anyway, and waiting would
+        freeze the 50 Hz loop. Only a real socket error drops the link."""
+        line = "P16," + ",".join(str(int(p)) for p in pulses16)
+        if self._sock:
+            try:
+                _, writable, _ = select.select([], [self._sock], [], 0)
+            except (OSError, ValueError):
+                writable = [self._sock]          # let send() report the real error
+            if not writable:
+                self.dropped += 1
+                return False
+        return self.send(line)
 
     # ---- read (background thread)
     def _reader(self):
@@ -115,12 +136,11 @@ class Link:
                 if self._ser:
                     chunk = self._ser.read(256)
                 else:
-                    try:
+                    ready, _, _ = select.select([self._sock], [], [], 0.05)
+                    chunk = b""
+                    if ready:
                         chunk = self._sock.recv(1024)
-                    except socket.timeout:
-                        chunk = b""
-                    else:
-                        if chunk == b"":                       # peer closed
+                        if chunk == b"":                       # peer closed (e.g. ESP rebooted)
                             raise OSError("connection closed by robot")
             except (OSError, Exception) as e:                  # serial errors are not OSError
                 if not self._stop.is_set():
@@ -145,6 +165,39 @@ def resolve_host(name, timeout=2.0):
         return socket.gethostbyname(name)
     finally:
         socket.setdefaulttimeout(old)
+
+
+def local_ip():
+    """This PC's address on the network that has the default route (e.g. the hotspot)."""
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))           # no packet is sent: UDP connect just picks a route
+        return s.getsockname()[0]
+    except OSError:
+        return None
+    finally:
+        s.close()
+
+
+def discover(port=TCP_PORT, timeout=0.4):
+    """Find Spidy on the local /24 network when mDNS (spidy.local) doesn't work, which is
+    common on phone hotspots. Tries TCP port 5000 on every address; the firmware greets
+    every new connection with READY. Returns a list of IPs (usually one). Takes ~1-3 s."""
+    ip = local_ip()
+    if not ip:
+        return []
+    hosts = [str(h) for h in ipaddress.ip_network(ip + "/24", strict=False).hosts() if str(h) != ip]
+
+    def probe(h):
+        try:
+            with socket.create_connection((h, port), timeout=timeout) as c:
+                c.settimeout(1.0)
+                return h if b"READY" in c.recv(64) else None
+        except OSError:
+            return None
+
+    with ThreadPoolExecutor(max_workers=64) as ex:
+        return [h for h in ex.map(probe, hosts) if h]
 
 
 class Pinger:
